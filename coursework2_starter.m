@@ -14,7 +14,7 @@ CLASSIFIER = 'nearest neighbor';
 % This should work on 32 and 64 bit versions of Windows, MacOS, and Linux
 %run('vlfeat/toolbox/vl_setup')
 
-data_path = '../data/';
+data_path = 'data/';
 
 %This is the list of categories / directories to use. The categories are
 %somewhat sorted by similarity so that the confusion matrix looks more
@@ -68,13 +68,13 @@ switch lower(FEATURE)
         % square portion out of each image. Making the tiny images zero mean and
         % unit length (normalizing them) will increase performance modestly.
         
-        train_image_feats = get_tiny_images(train_image_paths);
-        test_image_feats  = get_tiny_images(test_image_paths);
+        train_image_feats = get_tiny_images(train_image_paths, 1, 12, "", "");
+        test_image_feats = get_tiny_images(test_image_paths, 1, 12, "", "");
     case 'colour histogram'
         %You should allow get_colour_histograms to take parameters e.g.
         %quantisation, colour space etc.
-        train_image_feats = get_colour_histograms(train_image_paths);
-        test_image_feats  = get_colour_histograms(test_image_paths);
+        train_image_feats = get_colour_histograms(train_image_paths, 'hsv', 6);
+        test_image_feats  = get_colour_histograms(test_image_paths,'hsv', 6);
      case 'bag of sift'
         % YOU CODE build_vocabulary.m
         if ~exist('vocab.mat', 'file')
@@ -124,7 +124,7 @@ switch lower(CLASSIFIER)
     % predicted_categories is an M x 1 cell array, where each entry is a string
     %  indicating the predicted category for each test image.
     % Useful functions: pdist2 (Matlab) and vl_alldist2 (from vlFeat toolbox)
-        predicted_categories = nearest_neighbor_classify(train_image_feats, train_labels, test_image_feats);
+        predicted_categories = k_nearest_neighbour_classifier(train_image_feats, train_labels, test_image_feats, 15, 'spearman');
     case 'support vector machine'
         predicted_categories = svm_classify(train_image_feats, train_labels, test_image_feats);
 end
