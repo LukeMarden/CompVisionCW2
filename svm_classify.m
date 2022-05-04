@@ -7,7 +7,7 @@
 %margin, is W*X + B where '*' is the inner product or dot product and W and
 %B are the learned hyperplane parameters. 
 
-function predicted_categories = svm_classify(train_image_feats, train_labels, test_image_feats)
+function predicted_categories = svm_classify(train_image_feats, train_labels, test_image_feats, lamba_value)
 % image_feats is an N x d matrix, where d is the dimensionality of the
 %  feature representation.
 % train_labels is an N x 1 cell array, where each entry is a string
@@ -47,3 +47,22 @@ Useful functions:
 %because unique() sorts them. This shouldn't really matter, though.
 categories = unique(train_labels); 
 num_categories = length(categories);
+
+for i = 1:num_categories
+    %find all matches for one side of bound, and others are other side
+    matching_indices = double(strcmp(categories(i), train_labels));
+    %svm works on -1, and 1 as the two binary values so needs to be
+    %converted to that
+    matching_indices(matching_indices==0) = -1;
+    %generate the vectors
+    [w, b, ~] = vl_svmtrain(train_image_feats', matching_indices, lamba_value);
+    %find predictions based on lines
+    eq = [num2str(w(1)) '*x+' num2str(w(2)) '*y+' num2str(b)];
+    line = ezplot(eq, [-0.9 0.9 -0.9 0.9]);
+    set(line, 'Color', [0 0.8 0],'linewidth', 2);
+    
+end
+% disp(w);
+
+
+
