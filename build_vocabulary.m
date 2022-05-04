@@ -10,6 +10,17 @@ function vocab = build_vocabulary( image_paths, vocab_size )
 % The output 'vocab' should be vocab_size x 128. Each row is a cluster
 % centroid / visual word.
 
+vocab = zeros(vocab_size, 128);
+for i= 1:length(image_paths)
+    image = imread(char(image_paths(i)));
+    image = rgb2gray(image);
+    image = single(image);    
+    
+    [locations, SIFT_features] = vl_dsift(image);
+    [centers, assignments] = vl_kmeans(single(SIFT_features), vocab_size);
+    vocab(:,i) = centers;
+end
+
 %{ 
 Useful functions:
 [locations, SIFT_features] = vl_dsift(img) 
