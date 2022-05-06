@@ -47,6 +47,7 @@ Useful functions:
 %because unique() sorts them. This shouldn't really matter, though.
 categories = unique(train_labels); 
 num_categories = length(categories);
+predictions = zeros(length(test_image_feats), num_categories);
 
 for i = 1:num_categories
     %find all matches for one side of bound, and others are other side
@@ -56,13 +57,16 @@ for i = 1:num_categories
     matching_indices(matching_indices==0) = -1;
     %generate the vectors
     [w, b, ~] = vl_svmtrain(train_image_feats', matching_indices, lamba_value);
-    %find predictions based on lines
-    eq = [num2str(w(1)) '*x+' num2str(w(2)) '*y+' num2str(b)];
-    line = ezplot(eq, [-0.9 0.9 -0.9 0.9]);
-    set(line, 'Color', [0 0.8 0],'linewidth', 2);
-    
+    %turn the b value into a matrix that can be applied onto every row
+    b = repmat(b, 1, length(test_image_feats'));
+    %determine distances to each vector
+    predictions(:,i) = (w' * test_image_feats') + b;
 end
-% disp(w);
+
+%find the prediction that is furthest from a line in the positive side.
+[~,I] = max(predictions,[],2);
+%find the catagory that corresponds to the indice from the max function
+predicted_categories = categories(I);
 
 
 
