@@ -3,7 +3,7 @@
 %This function will sample SIFT descriptors from the training images,
 %cluster them with kmeans, and then return the cluster centers.
 
-function vocab = build_vocabulary( image_paths, vocab_size )
+function vocab = build_vocabulary(image_paths, vocab_size)
 % The inputs are images, a N x 1 cell array of image paths and the size of 
 % the vocabulary.
 
@@ -12,20 +12,19 @@ function vocab = build_vocabulary( image_paths, vocab_size )
 
 vocab = zeros(vocab_size, 128);
 %SIFT_list = zeros(128,0);
-listSize=0;
-for i=1:length(image_paths)
-    image = imread(char(image_paths(i)));
-    image = rgb2gray(image);
-    image = single(image);
-    image = vl_imsmooth(image, 2);
-
-    [locations, SIFT_features] = vl_dsift(image, 'fast','size', 64);
-    listSize = listSize + size(SIFT_features,2);
-end
-disp(listSize);
-SIFT_list = zeros(128, listSize);
-
-currentIndex = 1;
+listSize=1051384;
+% for i=1:length(image_paths)
+%     image = imread(char(image_paths(i)));
+%     image = rgb2gray(image);
+%     image = single(image);
+%     image = vl_imsmooth(image, 2);
+% 
+%     [locations, SIFT_features] = vl_dsift(image, 'fast','size', 64);
+%     listSize = listSize + size(SIFT_features,2);
+% end
+% disp(listSize);
+% SIFT_list = zeros(128, listSize);
+SIFT_list = [];
 for i= 1:length(image_paths)
     image2 = imread(char(image_paths(i)));
     image2 = rgb2gray(image2);
@@ -34,16 +33,13 @@ for i= 1:length(image_paths)
     image2 = vl_imsmooth(image2,2);
     [locations, SIFT_features2] = vl_dsift(image2, 'fast', 'size', 64);
     for j = 1:size(SIFT_features2,2)
-        SIFT_list(:,currentIndex) = SIFT_features2(:,j);
+        SIFT_list = [ SIFT_list SIFT_features2(:,j)];
     end
-    currentIndex = currentIndex + size(SIFT_features2,2);
     
     %[centers, assignments] = vl_kmeans(single(SIFT_features), vocab_size);
     %vocab(:,i) = centers;
     disp(i);
 end
-disp("YEAH WE MADE ITTT");
-
 [centers, assignments] = vl_kmeans(single(SIFT_list), vocab_size);
 vocab = centers';
 
@@ -64,7 +60,6 @@ Useful functions:
   be very slow and you'll see relatively little performance gain from
   extremely dense sampling. You are welcome to use your own SIFT feature
   code! It will probably be slower, though.
-
 [centers, assignments] = vl_kmeans(X, K)
  http://www.vlfeat.org/matlab/vl_kmeans.html
   X is a d x M matrix of sampled SIFT features, where M is the number of
@@ -73,7 +68,6 @@ Useful functions:
   K is the number of clusters desired (vocab_size)
   centers is a d x K matrix of cluster centroids. This is your vocabulary.
    You can disregard 'assignments'.
-
   Matlab has a build in kmeans function, see 'help kmeans', but it is
   slower.
 %}
