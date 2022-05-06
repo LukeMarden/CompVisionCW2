@@ -22,6 +22,36 @@ function image_feats = get_bags_of_sifts(image_paths)
 % SIFT features will look very different from a smaller version of the same
 % image.
 
+load('vocab.mat');
+
+image_feats = zeros(size(image_paths,1), size(vocab,1));
+for i = 1: size(image_paths)
+    image = imread(char(image_paths(i)));
+    image = rgb2gray(image);
+    image = single(image);
+    image = vl_imsmooth(image, 2);
+    
+    [locations, SIFT_features] = vl_dsift(image, 'fast','size', 64);
+    closestFeat = -1;
+    closestFeatDist = -1;
+    
+    histogram = zeros(50, 1);
+    SIFT_features = SIFT_features';
+    for j = 1:size(SIFT_features,1)
+        for k=1:size(vocab,1)
+            D = vl_alldist2(single(SIFT_features(j,:)), vocab(k,:));
+            totalDistance = sum(sum(D), 2);
+            if totalDistance < closestFeatDist || closestFeatDist == -1
+                closestFeatDist = totalDistance;
+                closestFeat = k;
+            end
+        end
+        %Increase histogram for closest vocab word for this image 
+        histogram(closestFeat,1) = histogram(closestFeat) + 1;
+    end
+    disp("One hist down");
+    image_feats(i,:) = histogram;
+end
 %{
 Useful functions:
 [locations, SIFT_features] = vl_dsift(img) 
@@ -47,5 +77,3 @@ D = vl_alldist2(X,Y)
     cluster center for every SIFT feature. You could easily code this
     yourself, but vl_alldist2 tends to be much faster.
 %}
-
-load('vocab.mat')
