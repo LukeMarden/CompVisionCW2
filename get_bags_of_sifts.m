@@ -33,10 +33,10 @@ switch lower(setting)
             image = vl_imsmooth(image, 2);
 
             [locations, SIFT_features] = vl_dsift(image, 'fast','size', 64);
-            closestFeat = -1;
-            closestFeatDist = -1;
+            %closestFeat = -1;
+            %closestFeatDist = -1;
 
-            histogram = zeros(50, 1);
+            histogram = zeros(size(vocab,1), 1);
             SIFT_features = SIFT_features';
             for j = 1:size(SIFT_features,1)
                 for k=1:size(vocab,1)
@@ -47,8 +47,10 @@ switch lower(setting)
                         closestFeat = k;
                     end
                 end
-                %Increase histogram for closest vocab word for this image 
+                %Increase histogram for closest vocab word for this visual word 
                 histogram(closestFeat,1) = histogram(closestFeat) + 1;
+                closestFeat = -1;
+                closestFeatDist = -1;
             end
             disp("One hist down");
             image_feats(i,:) = histogram;
@@ -57,55 +59,103 @@ switch lower(setting)
        disp("I'm a little teapot");
        
        load('vocab.mat');
+       image_feats = zeros(size(image_paths,1), size(vocab,1));
+
        for i = 1: size(image_paths)
            image = imread(char(image_paths(i)));
            image = rgb2gray(image);
            image = single(image);
            image = vl_imsmooth(image,2);
-           
-           subImage1 = image(1:end/2, 1: end/2);
-           subImage2 = image(1:end/2, end/2 + 1: end);
-           subImage3 = image(end/2 + 1:end, 1:end/2);
-           subImage4 = image(end/2 + 1:end, end/2 + 1:end);
-           %montage({subImage1, subImage2,subImage3,subImage4})
-           
-           disp("Short and stout")
-           [domlocations, domSIFT_features] = vl_dsift(image, 'fast','size', 64);
-           [sub1Locations, sub1LSIFT_features] = vl_dsift(subImage1, 'fast','size', 64);
-           [sub2locations, sub2SIFT_features] = vl_dsift(subImage2, 'fast','size', 64);
-           [sub3locations, sub3SIFT_features] = vl_dsift(subImage3, 'fast','size', 64);
-           [sub4locations, sub4SIFT_features] = vl_dsift(subImage4, 'fast','size', 64);
-           disp("Here's is my handle")
-           
-           maxLevel = 1;
-           currentLevel = 1;
-           intersectionSum = 0;
-           for x = 1:(4^currentLevel) + 1
-               switch x
-                   case 1
-                       localSIFT = domSIFT_features';
-                   case 2
-                       localSIFT = sub1LSIFT_features';
-                   case 3
-                       localSIFT = sub2LSIFT_features';
-                   case 4
-                       localSIFT = sub3LSIFT_features';
-                   case 5
-                       localSIFT = sub4LSIFT_features';
+
+           maxLevel = 1;           
+           closestFeat = -1;
+           closestFeatDist = -1;
+           histogram = zeros(size(vocab,1), 1);
+
+
+            % 1) Get histogram of word frequency in largest image with
+            %    weighting adjustment
+            % 2) Split image into 4, calculate word frequency in each
+            %    smaller image (using parent histograms as well)
+            % 3) Combine the histogram intersections at each level to get a
+            % final similarity between each feature 
+
+           [locations, SIFT_features] = vl_dsift(image, 'fast','size', 64);
+           SIFT_features = SIFT_features';
+           for j = 1:size(SIFT_features,1)
+               for k = 1:size(vocab,1)
+                    D = vl_alldist2(single(SIFT_features(j,:)), vocab(k,:));
+                    totalDistance = sum(sum(D), 2);
+                    if totalDistance < closestFeatDist || closestFeatDist == -1
+                        closestFeatDist = totalDistance;
+                        closestFeat = k;
+                    end
                end
-               for j = 1:size(localSIFT,1)
-                   for k = 1:size(vocab,1)
-                      levelXIntersection = sum(min(vocab(k,:), localSIFT(j,:)));
-                      levelXIntersection = (1 / (2^(maxLevel - currentLevel + 1))) * levelXIntersection; 
-                      %intersectionSum = intersectionSum + levelXIntersection;
-                   end
-               end
-               
+               histogram(closestFeat,1) = histogram(closestFeat) + 1;
+               closestFeat = -1;
+               closestFeatDist = -1;
            end
 
+
+
+
+           for j = 1: size(SIFT_features, 1)
+               for k = 1:size(vocab,1)
+                    histogramIntersection = RecursivePyramid(image, vocab(k,:), SIFT_features(j,:), 0, maxLevel);
+                    if histogramIntersection < closestFeatDist || closestFeatDist == -1
+                        closestFeatDist = histogramIntersection;
+                        closestFeat = j;
+                    end                    
+               end
+               histogram(closestFeat,1) = histogram(closestFeat) + 1;
+               closestFeat = -1;
+               closestFeatDist = -1;
+           end
+           disp(i);
+           image_feats(i,:) = histogram;
        end
-       disp("Here is my spout"); 
+       %disp("Here is my spout"); 
 end
+
+%            subImage1 = image(1:end/2, 1: end/2);
+%            subImage2 = image(1:end/2, end/2 + 1: end);
+%            subImage3 = image(end/2 + 1:end, 1:end/2);
+%            subImage4 = image(end/2 + 1:end, end/2 + 1:end);
+%            %montage({subImage1, subImage2,subImage3,subImage4})
+%            
+%            disp("Short and stout")
+%            [domlocations, domSIFT_features] = vl_dsift(image, 'fast','size', 64);
+%            [sub1Locations, sub1LSIFT_features] = vl_dsift(subImage1, 'fast','size', 64);
+%            [sub2locations, sub2SIFT_features] = vl_dsift(subImage2, 'fast','size', 64);
+%            [sub3locations, sub3SIFT_features] = vl_dsift(subImage3, 'fast','size', 64);
+%            [sub4locations, sub4SIFT_features] = vl_dsift(subImage4, 'fast','size', 64);
+%            disp("Here's is my handle")
+%            
+%            maxLevel = 1;
+%            currentLevel = 1;
+%            intersectionSum = 0;
+%            for x = 1:(4^currentLevel) + 1
+%                switch x
+%                    case 1
+%                        localSIFT = domSIFT_features';
+%                    case 2
+%                        localSIFT = sub1LSIFT_features';
+%                    case 3
+%                        localSIFT = sub2LSIFT_features';
+%                    case 4
+%                        localSIFT = sub3LSIFT_features';
+%                    case 5
+%                        localSIFT = sub4LSIFT_features';
+%                end
+%                for j = 1:size(localSIFT,1)
+%                    for k = 1:size(vocab,1)
+%                       levelXIntersection = sum(min(vocab(k,:), localSIFT(j,:)));
+%                       levelXIntersection = (1 / (2^(maxLevel - currentLevel + 1))) * levelXIntersection; 
+%                       %intersectionSum = intersectionSum + levelXIntersection;
+%                    end
+%                end
+%                
+%            end
         
 %{
 Useful functions:
