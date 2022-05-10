@@ -33,8 +33,7 @@ switch lower(setting)
             image = vl_imsmooth(image, 2);
 
             [locations, SIFT_features] = vl_dsift(image, 'fast','size', 64);
-            closestFeat = -1;
-            closestFeatDist = -1;
+            
 %             for j = 1:size(SIFT_features,2)
 %                 for k = 1:size(SIFT_features,2)
 %                     if j ~= k
@@ -53,24 +52,53 @@ switch lower(setting)
 %             end
 
             histogram = zeros(size(vocab,1), 1);
-            SIFT_features = SIFT_features';
-            for j = 1:size(SIFT_features,1)
-                for k=1:size(vocab,1)
-                    D = vl_alldist2(single(SIFT_features(j,:)), vocab(k,:));
-                    totalDistance = sum(sum(D), 2);
-                    if totalDistance < closestFeatDist || closestFeatDist == -1
-                        closestFeatDist = totalDistance;
-                        closestFeat = k;
+            localVocab = vocab';
+            % Get differences between each local feature and the vocab
+            D = vl_alldist2(SIFT_features, localVocab);
+            D2 = zeros(size(SIFT_features,2), size(localVocab,2));
+            for j = 1:size(SIFT_features,2)
+                for k = 1:size(localVocab,2)
+                    for l = 1:size(SIFT_features,1)
+                        %disp(single(SIFT_features(l,j)) - single(localVocab(l,j)));
+                        D2(j,k) = D2(j,k) + abs(single(SIFT_features(l,j)) - single(localVocab(l,k)));
                     end
                 end
-                %Increase histogram for closest vocab word for this visual word 
-                histogram(closestFeat,1) = histogram(closestFeat) + 1;
+            end
+
+            %Loop through the local features creating a histogram for each
+            %vocab word most similar
+
+            
+            for j = 1:size(D2,1)
                 closestFeat = -1;
                 closestFeatDist = -1;
+                for k = 1:size(D2,2)
+                    if D2(j,k) < closestFeatDist || closestFeatDist == -1
+                        closestFeat = k;
+                        closestFeatDist = D2(j,k);
+                    end
+                end
+                histogram(closestFeat) = histogram(closestFeat) + 1;
             end
-            disp("One hist down");
             image_feats(i,:) = histogram;
         end
+%             for j = 1:size(SIFT_features,1)
+%                 for k=1:size(vocab,1)
+%                     D = vl_alldist2(single(SIFT_features(j,:)), vocab(k,:));
+%                     totalDistance = sum(sum(D), 2);
+%                     if totalDistance < closestFeatDist || closestFeatDist == -1
+%                         closestFeatDist = totalDistance;
+%                         closestFeat = k;
+%                     end
+%                 end
+%                 %Increase histogram for closest vocab word for this visual word 
+%                 histogram(closestFeat,1) = histogram(closestFeat) + 1;
+%                 closestFeat = -1;
+%                 closestFeatDist = -1;
+%             end
+%             disp("One hist down");
+%             image_feats(i,:) = histogram;
+%         end
    case 'spatial'
        disp("I'm a little teapot");
        
