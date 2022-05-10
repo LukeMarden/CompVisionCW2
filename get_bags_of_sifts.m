@@ -33,8 +33,24 @@ switch lower(setting)
             image = vl_imsmooth(image, 2);
 
             [locations, SIFT_features] = vl_dsift(image, 'fast','size', 64);
-            %closestFeat = -1;
-            %closestFeatDist = -1;
+            closestFeat = -1;
+            closestFeatDist = -1;
+%             for j = 1:size(SIFT_features,2)
+%                 for k = 1:size(SIFT_features,2)
+%                     if j ~= k
+%                         for l = 1:size(SIFT_features,1)
+%                             difference = SIFT_features(l,j) - SIFT_features(l,k);
+%                             if difference ~= 0
+%                                 k = k + 1;
+%                                 break;
+%                             end
+%                             if l == size(SIFT_features,1)
+%                                 disp("Identical");
+%                             end
+%                         end
+%                     end
+%                 end
+%             end
 
             histogram = zeros(size(vocab,1), 1);
             SIFT_features = SIFT_features';
@@ -66,11 +82,16 @@ switch lower(setting)
            image = rgb2gray(image);
            image = single(image);
            image = vl_imsmooth(image,2);
-
-           maxLevel = 1;           
-           closestFeat = -1;
-           closestFeatDist = -1;
-           histogram = zeros(size(vocab,1), 1);
+           
+           histogram = RecursivePyramid(image, vocab, 0, 0, 1);
+           image_feats(i,:) = histogram;
+           disp(i);
+       end
+end
+%            maxLevel = 1;           
+%            closestFeat = -1;
+%            closestFeatDist = -1;
+%            histogram = zeros(size(vocab,1), 1);
 
 
             % 1) Get histogram of word frequency in largest image with
@@ -80,42 +101,42 @@ switch lower(setting)
             % 3) Combine the histogram intersections at each level to get a
             % final similarity between each feature 
 
-           [locations, SIFT_features] = vl_dsift(image, 'fast','size', 64);
-           SIFT_features = SIFT_features';
-           for j = 1:size(SIFT_features,1)
-               for k = 1:size(vocab,1)
-                    D = vl_alldist2(single(SIFT_features(j,:)), vocab(k,:));
-                    totalDistance = sum(sum(D), 2);
-                    if totalDistance < closestFeatDist || closestFeatDist == -1
-                        closestFeatDist = totalDistance;
-                        closestFeat = k;
-                    end
-               end
-               histogram(closestFeat,1) = histogram(closestFeat) + 1;
-               closestFeat = -1;
-               closestFeatDist = -1;
-           end
-
-
-
-
-           for j = 1: size(SIFT_features, 1)
-               for k = 1:size(vocab,1)
-                    histogramIntersection = RecursivePyramid(image, vocab(k,:), SIFT_features(j,:), 0, maxLevel);
-                    if histogramIntersection < closestFeatDist || closestFeatDist == -1
-                        closestFeatDist = histogramIntersection;
-                        closestFeat = j;
-                    end                    
-               end
-               histogram(closestFeat,1) = histogram(closestFeat) + 1;
-               closestFeat = -1;
-               closestFeatDist = -1;
-           end
-           disp(i);
-           image_feats(i,:) = histogram;
-       end
+%            [locations, SIFT_features] = vl_dsift(image, 'fast','size', 64);
+%            SIFT_features = SIFT_features';
+%            for j = 1:size(SIFT_features,1)
+%                for k = 1:size(vocab,1)
+%                     D = vl_alldist2(single(SIFT_features(j,:)), vocab(k,:));
+%                     totalDistance = sum(sum(D), 2);
+%                     if totalDistance < closestFeatDist || closestFeatDist == -1
+%                         closestFeatDist = totalDistance;
+%                         closestFeat = k;
+%                     end
+%                end
+%                histogram(closestFeat,1) = histogram(closestFeat) + 1;
+%                closestFeat = -1;
+%                closestFeatDist = -1;
+%            end
+% 
+% 
+% 
+% 
+%            for j = 1: size(SIFT_features, 1)
+%                for k = 1:size(vocab,1)
+%                     histogramIntersection = RecursivePyramid(image, vocab(k,:), SIFT_features(j,:), 0, maxLevel);
+%                     if histogramIntersection < closestFeatDist || closestFeatDist == -1
+%                         closestFeatDist = histogramIntersection;
+%                         closestFeat = j;
+%                     end                    
+%                end
+%                histogram(closestFeat,1) = histogram(closestFeat) + 1;
+%                closestFeat = -1;
+%                closestFeatDist = -1;
+%            end
+%            disp(i);
+%            image_feats(i,:) = histogram;
+       %end
        %disp("Here is my spout"); 
-end
+%end
 
 %            subImage1 = image(1:end/2, 1: end/2);
 %            subImage2 = image(1:end/2, end/2 + 1: end);
