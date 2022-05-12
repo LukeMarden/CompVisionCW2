@@ -6,9 +6,9 @@
 
 %FEATURE = 'tiny image';
 %FEATURE = 'colour histogram';
-%FEATURE = 'bag of sift';
+FEATURE = 'bag of sift';
 %FEATURE = 'spatial pyramids';
-FEATURE = 'pca';
+% FEATURE = 'pca';
 
 CLASSIFIER = 'nearest neighbor';
 
@@ -57,54 +57,37 @@ fprintf('Using %s representation for images\n', FEATURE)
 
 switch lower(FEATURE)    
     case 'tiny image'
-        %You need to reimplement get_tiny_images. Allow function to take
-        %parameters e.g. feature size.
-        
-        % image_paths is an N x 1 cell array of strings where each string is an
-        %  image path on the file system.
-        % image_feats is an N x d matrix of resized and then vectorized tiny
-        %  images. E.g. if the images are resized to 16x16, d would equal 256.
-        
-        % To build a tiny image feature, simply resize the original image to a very
-        % small square resolution, e.g. 16x16. You can either resize the images to
-        % square while ignoring their aspect ratio or you can crop the center
-        % square portion out of each image. Making the tiny images zero mean and
-        % unit length (normalizing them) will increase performance modestly.
-        
         train_image_feats = get_tiny_images(train_image_paths, 1, 12, "", "");
         test_image_feats = get_tiny_images(test_image_paths, 1, 12, "", "");
     case 'colour histogram'
-        %You should allow get_colour_histograms to take parameters e.g.
-        %quantisation, colour space etc.
         train_image_feats = get_colour_histograms(train_image_paths, 'hsv', 6);
         test_image_feats  = get_colour_histograms(test_image_paths,'hsv', 6);
      case 'bag of sift'
-        % YOU CODE build_vocabulary.m
+         bin_size = 64; 
         if ~exist('vocab.mat', 'file')
             fprintf('No existing dictionary found. Computing one from training images\n')
             vocab_size = 50; % you need to test the influence of this parameter
-            vocab = build_vocabulary(train_image_paths, vocab_size); %Also allow for different sift parameters
+            
+            vocab = build_vocabulary(train_image_paths, vocab_size, 'grayscale', bin_size); %Also allow for different sift parameters
             save('vocab.mat', 'vocab')
         end
-        
-        % YOU CODE get_bags_of_sifts.m
         if ~exist('image_feats.mat', 'file')
-            train_image_feats = get_bags_of_sifts(train_image_paths, ''); %Allow for different sift parameters
-            test_image_feats  = get_bags_of_sifts(test_image_paths, ''); 
+            train_image_feats = get_bags_of_sifts(train_image_paths, 'normal', bin_size, 'grayscale'); %Allow for different sift parameters
+            test_image_feats  = get_bags_of_sifts(test_image_paths, 'normal', bin_size, 'grayscale'); 
             save('image_feats.mat', 'train_image_feats', 'test_image_feats')
         end
       case 'spatial pyramids'
-          % YOU CODE spatial pyramids method
+          bin_size = 64; 
           if ~exist('vocab.mat', 'file')
             fprintf('No existing dictionary found. Computing one from training images\n')
             vocab_size = 50; % you need to test the influence of this parameter
-            vocab = build_vocabulary(train_image_paths, vocab_size); %Also allow for different sift parameters
+            vocab = build_vocabulary(train_image_paths, vocab_size, 'grayscale', bin_size); %Also allow for different sift parameters
             save('vocab.mat', 'vocab')
           end
           
           if ~exist('image_feats.mat', 'file')
-            train_image_feats = get_bags_of_sifts(train_image_paths, 'spatial'); %Allow for different sift parameters
-            test_image_feats  = get_bags_of_sifts(test_image_paths, 'spatial'); 
+            train_image_feats = get_bags_of_sifts(train_image_paths, 'spatial', bin_size, 'grayscale'); %Allow for different sift parameters
+            test_image_feats  = get_bags_of_sifts(test_image_paths, 'spatial', bin_size, 'grayscale'); 
             save('image_feats.mat', 'train_image_feats', 'test_image_feats')
           end
       case 'pca'
@@ -125,28 +108,11 @@ fprintf('Using %s classifier to predict test set categories\n', CLASSIFIER)
 
 switch lower(CLASSIFIER)    
     case 'nearest neighbor'
-    %Here, you need to reimplement nearest_neighbor_classify. My P-code
-    %implementation has k=1 set. You need to allow for varying this
-    %parameter.
-        
-    %This function will predict the category for every test image by finding
-    %the training image with most similar features. Instead of 1 nearest
-    %neighbor, you can vote based on k nearest neighbors which will increase
-    %performance (although you need to pick a reasonable value for k).
-    
-    % image_feats is an N x d matrix, where d is the dimensionality of the
-    %  feature representation.
-    % train_labels is an N x 1 cell array, where each entry is a string
-    %  indicating the ground truth category for each training image.
-    % test_image_feats is an M x d matrix, where d is the dimensionality of the
-    %  feature representation. You can assume M = N unless you've modified the
-    %  starter code.
-    % predicted_categories is an M x 1 cell array, where each entry is a string
-    %  indicating the predicted category for each test image.
-    % Useful functions: pdist2 (Matlab) and vl_alldist2 (from vlFeat toolbox)
         predicted_categories = k_nearest_neighbour_classifier(train_image_feats, train_labels, test_image_feats, 15, 'spearman');
     case 'support vector machine'
-        predicted_categories = svm_classify(train_image_feats, train_labels, test_image_feats);
+        predicted_categories = svm_classify(train_image_feats, train_labels, test_image_feats, 0.0001);
+    case 'guassian_naive_bayes'
+        predicted_categories = naive_bayes_classify(train_image_feats, train_labels, test_image_feats);
 end
 
 %% Step 3: Build a confusion matrix and score the recognition system

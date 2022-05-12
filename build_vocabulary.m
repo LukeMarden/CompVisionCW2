@@ -3,29 +3,14 @@
 %This function will sample SIFT descriptors from the training images,
 %cluster them with kmeans, and then return the cluster centers.
 
-function vocab = build_vocabulary(image_paths, vocab_size, colour_scheme)
+function vocab = build_vocabulary(image_paths, vocab_size, colour_scheme, bin_size)
 % The inputs are images, a N x 1 cell array of image paths and the size of 
 % the vocabulary.
 
 % The output 'vocab' should be vocab_size x 128. Each row is a cluster
 % centroid / visual word.
-
-vocab = zeros(vocab_size, 128);
-%SIFT_list = zeros(128,0);
-listSize=1051384;
-% for i=1:length(image_paths)
-%     image = imread(char(image_paths(i)));
-%     image = rgb2gray(image);
-%     image = single(image);
-%     image = vl_imsmooth(image, 2);
-% 
-%     [locations, SIFT_features] = vl_dsift(image, 'fast','size', 64);
-%     listSize = listSize + size(SIFT_features,2);
-% end
-% disp(listSize);
-% SIFT_list = zeros(128, listSize);
 SIFT_list = [];
-for i= 1:1%length(image_paths)
+for i= 1:length(image_paths)
     switch(colour_scheme)
         case('grayscale')
             image = imread(char(image_paths(i)));
@@ -58,26 +43,17 @@ for i= 1:1%length(image_paths)
             image = transformed;
     end
     image_sift_features = [];
-    disp(image_sift_features);
+%     disp(image_sift_features);
     for j=1:size(image,3)
-        disp(j);
         smoothed_image = vl_imsmooth(image(:,:,j),2);
-        [locations, SIFT_features] = vl_dsift(smoothed_image, 'fast', 'size', 64);
-%         image_sift_features(j,:) = [image_sift_features(j,:) SIFT_features];
-        image_sift_features = cat(3, image_sift_features, SIFT_features');
-%         for k = 1:size(SIFT_features,2)
-% %             image_sift_features(j,:) = [image_sift_features(j,:) SIFT_features(:,k)'];
-%         end
+        [~, SIFT_features] = vl_dsift(smoothed_image, 'fast', 'size', bin_size);
+        image_sift_features = cat(2, image_sift_features, SIFT_features');
     end
-    
-    
-    %[centers, assignments] = vl_kmeans(single(SIFT_features), vocab_size);
-    %vocab(:,i) = centers;
-    disp(i);
+    SIFT_list = cat(1, SIFT_list, image_sift_features);
+%     disp(i);
 end
-% [centers, assignments] = vl_kmeans(single(SIFT_list), vocab_size);
-% vocab = centers';
-vocab = image_sift_features;
+[centers, ~] = vl_kmeans(single(SIFT_list'), vocab_size);
+vocab = centers';
 
 
 

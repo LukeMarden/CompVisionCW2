@@ -1,4 +1,4 @@
-function histogram = RecursivePyramid(image, vocab, nonWeightedHistogram, currentLevel, maxLevel)
+function histogram = RecursivePyramid(image, vocab, nonWeightedHistogram, currentLevel, maxLevel, bin_size)
 %RECURSIVEPYRAMID Summary of this function goes here
 %   Detailed explanation goes here
 
@@ -8,7 +8,7 @@ function histogram = RecursivePyramid(image, vocab, nonWeightedHistogram, curren
 %histogramIntersection = (1 / (2^(maxLevel - currentLevel + 1))) * histIntersection; 
 
 
-[locations, SIFT_features] = vl_dsift(image, 'fast','size', 16);
+[locations, SIFT_features] = vl_dsift(image, 'fast','size', bin_size);
 %SIFT_features = SIFT_features';
 localVocab = vocab';
 localHistogram = zeros(size(vocab,1), 1);
@@ -81,4 +81,3 @@ end
 %     closestFeat = -1;
 %     closestFeatDist = -1;
 % end
-
