@@ -32,7 +32,7 @@ switch lower(setting)
             image = single(image);
             image = vl_imsmooth(image, 2);
 
-            [locations, SIFT_features] = vl_dsift(image, 'fast','size', 64);
+            [locations, SIFT_features] = vl_dsift(image, 'fast','size', 16);
             
 %             for j = 1:size(SIFT_features,2)
 %                 for k = 1:size(SIFT_features,2)
@@ -54,7 +54,7 @@ switch lower(setting)
             histogram = zeros(size(vocab,1), 1);
             localVocab = vocab';
             % Get differences between each local feature and the vocab
-            D = vl_alldist2(SIFT_features, localVocab);
+            %D = vl_alldist2(SIFT_features, localVocab);
             D2 = zeros(size(SIFT_features,2), size(localVocab,2));
             for j = 1:size(SIFT_features,2)
                 for k = 1:size(localVocab,2)
@@ -80,7 +80,12 @@ switch lower(setting)
                 end
                 histogram(closestFeat) = histogram(closestFeat) + 1;
             end
+            %Normalise the histogram
+            total = sum(histogram);
+            histogram = histogram / total;
+            
             image_feats(i,:) = histogram;
+            disp(i);
         end
 %             for j = 1:size(SIFT_features,1)
 %                 for k=1:size(vocab,1)
@@ -112,6 +117,10 @@ switch lower(setting)
            image = vl_imsmooth(image,2);
            
            histogram = RecursivePyramid(image, vocab, 0, 0, 1);
+           %Normalise the histogram
+           total = sum(histogram);
+           histogram = histogram / total;
+           
            image_feats(i,:) = histogram;
            disp(i);
        end

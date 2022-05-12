@@ -4,8 +4,11 @@
 
 %% Step 0: Set up parameters, vlfeat, category list, and image paths.
 
-FEATURE = 'tiny image';
+%FEATURE = 'tiny image';
 %FEATURE = 'colour histogram';
+%FEATURE = 'bag of sift';
+%FEATURE = 'spatial pyramids';
+FEATURE = 'pca';
 
 CLASSIFIER = 'nearest neighbor';
 
@@ -86,12 +89,29 @@ switch lower(FEATURE)
         
         % YOU CODE get_bags_of_sifts.m
         if ~exist('image_feats.mat', 'file')
-            train_image_feats = get_bags_of_sifts(train_image_paths); %Allow for different sift parameters
-            test_image_feats  = get_bags_of_sifts(test_image_paths); 
+            train_image_feats = get_bags_of_sifts(train_image_paths, ''); %Allow for different sift parameters
+            test_image_feats  = get_bags_of_sifts(test_image_paths, ''); 
             save('image_feats.mat', 'train_image_feats', 'test_image_feats')
         end
       case 'spatial pyramids'
           % YOU CODE spatial pyramids method
+          if ~exist('vocab.mat', 'file')
+            fprintf('No existing dictionary found. Computing one from training images\n')
+            vocab_size = 50; % you need to test the influence of this parameter
+            vocab = build_vocabulary(train_image_paths, vocab_size); %Also allow for different sift parameters
+            save('vocab.mat', 'vocab')
+          end
+          
+          if ~exist('image_feats.mat', 'file')
+            train_image_feats = get_bags_of_sifts(train_image_paths, 'spatial'); %Allow for different sift parameters
+            test_image_feats  = get_bags_of_sifts(test_image_paths, 'spatial'); 
+            save('image_feats.mat', 'train_image_feats', 'test_image_feats')
+          end
+      case 'pca'
+          if exist('vocab.mat','file')
+              %Apply fisher LDA to each feature vector in the vocab
+              result = pca(vocab);
+          end
 end
 %% Step 2: Classify each test image by training and using the appropriate classifier
 % Each function to classify test features will return an N x 1 cell array,
