@@ -32,7 +32,7 @@ end
 
 plots = gobjects(length(features), 1);
 figure; hold on
-for i = 1:length(distance_metric)
+for i = 1:length(features)
     plots(i) = plot(results(:,1,i), results(:,2, i));
 end
 legend(plots, feature)
