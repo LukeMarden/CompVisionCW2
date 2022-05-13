@@ -6,9 +6,10 @@
 
 %FEATURE = 'tiny image';
 %FEATURE = 'colour histogram';
-FEATURE = 'bag of sift';
+% FEATURE = 'bag of sift';
 %FEATURE = 'spatial pyramids';
 % FEATURE = 'pca';
+FEATURE = 'fisher';
 
 CLASSIFIER = 'nearest neighbor';
 
@@ -66,7 +67,7 @@ switch lower(FEATURE)
          bin_size = 64; 
         if ~exist('vocab.mat', 'file')
             fprintf('No existing dictionary found. Computing one from training images\n')
-            vocab_size = 50; % you need to test the influence of this parameter
+            vocab_size = 200; % you need to test the influence of this parameter
             
             vocab = build_vocabulary(train_image_paths, vocab_size, 'grayscale', bin_size); %Also allow for different sift parameters
             save('vocab.mat', 'vocab')
@@ -95,6 +96,12 @@ switch lower(FEATURE)
               %Apply fisher LDA to each feature vector in the vocab
               result = pca(vocab);
           end
+    case 'fisher'
+        bin_size = 8; 
+        vocab_size = 200;
+%         [means, cov, prior] = build_fisher_vocab(train_image_paths, vocab_size, 'grayscale', bin_size);
+        train_image_feats = get_fisher_sifts(train_image_paths, bin_size, 'grayscale', means, cov, prior);
+        test_image_feats  = get_fisher_sifts(test_image_paths, bin_size, 'grayscale', means, cov, prior); 
 end
 %% Step 2: Classify each test image by training and using the appropriate classifier
 % Each function to classify test features will return an N x 1 cell array,
