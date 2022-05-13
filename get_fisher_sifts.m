@@ -3,7 +3,7 @@
 
 function image_feats = get_fisher_sifts(image_paths, bin_size, colour_scheme, mean, covariance, prior)
     load('vocab.mat');
-    image_feats = zeros(size(image_paths,1), size(vocab,1));
+%     image_feats = zeros(size(image_paths,1), size(vocab,1));
     for i = 1:size(image_paths)
         disp(i);
         switch(colour_scheme)
@@ -41,13 +41,9 @@ function image_feats = get_fisher_sifts(image_paths, bin_size, colour_scheme, me
         for j=1:size(image,3)
             smoothed_image = vl_imsmooth(image(:,:,j),2);
             [~, SIFT_features] = vl_dsift(smoothed_image, 'fast', 'size', bin_size);
-            image_sift_features = cat(2, image_sift_features, SIFT_features');
+            image_sift_features = cat(1, image_sift_features, SIFT_features');
         end
 
-%         image_feats(i, :) = vl_fisher(double(image_sift_features), mean', covariance', prior');
-        
-%         %Normalisation
-%         total = sum(image_feats(i, :));
-%         image_feats(i, :) = image_feats(i, :) / total;
+        image_feats(i, :) = (vl_fisher(single(image_sift_features'), mean, covariance, prior))';
+
     end
-    image_feats = mean';

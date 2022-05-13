@@ -47,7 +47,7 @@ Useful functions:
 %because unique() sorts them. This shouldn't really matter, though.
 categories = unique(train_labels); 
 num_categories = length(categories);
-predictions = zeros(length(test_image_feats), num_categories);
+predictions = zeros(size(test_image_feats, 1), num_categories);
 
 for i = 1:num_categories
     %find all matches for one side of bound, and others are other side
@@ -58,7 +58,7 @@ for i = 1:num_categories
     %generate the vectors
     [w, b, ~] = vl_svmtrain(train_image_feats', matching_indices, lamba_value);
     %turn the b value into a matrix that can be applied onto every row
-    b = repmat(b, 1, length(test_image_feats'));
+    b = repmat(b, 1, size(test_image_feats, 1));
     %determine distances to each vector
     predictions(:,i) = (w' * test_image_feats') + b;
 end

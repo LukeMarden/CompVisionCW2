@@ -1,7 +1,16 @@
 function histogram = get_spatial_sifts(image_paths, bin_size, colour_scheme, level, max_level)
+    if level == 0
+        histogram = get_histogram(image_paths, bin_size, colour_scheme, 0, max_level);
+    else
+        previous_level_histogram = get_spatial_sifts(image_paths, bin_size, colour_scheme, level-1, max_level);
+        this_histogram = get_histogram(image_paths, bin_size, colour_scheme, 0, max_level);
+        histogram = this_histogram + previous_level_histogram;
+    end
+
+function histogram = get_histogram(image_paths, bin_size, colour_scheme, level, max_level)
     load('vocab.mat');
     image_feats = zeros(size(image_paths,1), size(vocab,1));
-    for i = 2:2%size(image_paths)
+    for i = 1:size(image_paths)
         disp(i);
         switch(colour_scheme)
             case('grayscale')
@@ -45,26 +54,14 @@ function histogram = get_spatial_sifts(image_paths, bin_size, colour_scheme, lev
             split_features = [];
             for k = 1:length(split_image)
                 smoothed_image = vl_imsmooth(cell2mat(split_image(k)),2);
-                [~, SIFT_features] = vl_dsift(smoothed_image, 'fast', 'size', bin_size);
+                [locations, SIFT_features] = vl_dsift(smoothed_image, 'fast', 'size', bin_size);
                 split_features = cat(1, split_features, SIFT_features');
             end
             image_sift_features = cat(2, image_sift_features, split_features);
         end
-%         distances = vl_alldist2(single(image_sift_features), vocab');
-%         [~, I] = min(distances, [], 2);
-%         image_feats(i, :) = histcounts(I,1:size(vocab,1)+1);
-% 
-%         histogram = (1/(2^(max_level-level+1)))*image_feats;
-        imshow(uint8(cell2mat(split_image(1))));
-        histogram = split_image(1);
-    end
+        distances = vl_alldist2(single(image_sift_features'), vocab');
+        [~, I] = min(distances, [], 2);
+        image_feats(i, :) = histcounts(I,1:size(vocab,1)+1);
 
-
-function histogram = get_histogram(image_paths, bin_size, colour_scheme, level, max_level)
-    if level == 0
-        histogram = get_histogram(image_paths, bin_size, colour_scheme, 0, max_level);
-    else
-        previous_level_histogram = get_spatial_sifts(image_paths, bin_size, colour_scheme, level-1, max_level);
-        this_histogram = get_histogram(image_paths, bin_size, colour_scheme, 0, max_level);
-        histogram = this_histogram + previous_level_histogram;
+        histogram = (1/(2^(max_level-level+1)))*image_feats;
     end

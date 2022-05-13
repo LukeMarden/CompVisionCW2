@@ -45,4 +45,4 @@ for i= 1:length(image_paths)
     SIFT_list = cat(2, SIFT_list, image_sift_features);
 %     disp(i);
 end
-[MEANS, COVARIANCES, PRIORS] = vl_gmm(double(SIFT_list), vocab_size);
+[MEANS, COVARIANCES, PRIORS] = vl_gmm(single(SIFT_list), vocab_size);

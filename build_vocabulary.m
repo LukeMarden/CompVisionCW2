@@ -11,6 +11,7 @@ function vocab = build_vocabulary(image_paths, vocab_size, colour_scheme, bin_si
 % centroid / visual word.
 SIFT_list = [];
 for i= 1:length(image_paths)
+    disp(i);
     switch(colour_scheme)
         case('grayscale')
             image = imread(char(image_paths(i)));
@@ -46,13 +47,15 @@ for i= 1:length(image_paths)
 %     disp(image_sift_features);
     for j=1:size(image,3)
         smoothed_image = vl_imsmooth(image(:,:,j),2);
-        [~, SIFT_features] = vl_dsift(smoothed_image, 'fast', 'size', bin_size);
-        image_sift_features = cat(2, image_sift_features, SIFT_features');
+        [~, SIFT_features] = vl_dsift(smoothed_image, 'step', 8, 'size', bin_size, 'fast');
+        image_sift_features = cat(1, image_sift_features, SIFT_features);
     end
-    SIFT_list = cat(1, SIFT_list, image_sift_features);
+    SIFT_list = cat(2, SIFT_list, image_sift_features);
 %     disp(i);
 end
-[centers, ~] = vl_kmeans(single(SIFT_list'), vocab_size);
+[MEANS, COVARIANCES, PRIORS] = vl_gmm(SIFT_list, vocab_size);
+% vocab = image_sift_features;
+[centers, ~] = vl_kmeans(single(SIFT_list), vocab_size);
 vocab = centers';
 
 

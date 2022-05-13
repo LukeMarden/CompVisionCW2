@@ -1,12 +1,11 @@
-%Used to test lambda values on the svm classifier
-lambda_values = [0.00001:0.00001:1];
+k = [1:99];
 features = ['tiny_image', 'colour_hist', 'bag_of_sifts', 
     'pyramid_sifts', 'pca', 'fisher'];
 
-results = zeros(length(lambda_values),2, length(features));
+results = zeros(length(k),2, length(features));
 for i = 1:length(features)
     for j = 1:length(lambda_values)
-        disp([features(i) + ', ' + lambda_values(j)]);
+        disp([features(i) + ', ' + k(j)]);
         start_time = datetime(now, 'ConvertFrom', 'datenum');
         disp(['Start Time = ' datestr(start_time)]);
         tic;
@@ -19,11 +18,11 @@ for i = 1:length(features)
                 train_image_feats = get_tiny_images(train_image_paths, 1, 12, "", "");
                 test_image_feats = get_tiny_images(test_image_paths, 1, 12, "", "");
         end
-        predicted_categories = svm_classify(train_image_feats, train_labels, test_image_feats, lambda_values(j));
+        predicted_categories = k_nearest_neighbour_classifier(train_image_feats, train_labels, test_image_feats, k(j), 'spearman');
         classify_time = toc;
         disp(['Model Building = ' num2str(classify_time)]); 
         accuracy = get_accuracy(test_labels, categories, predicted_categories);
-        results(j, 1, i) = lambda_values(j);
+        results(j, 1, i) = k(j);
         results(j, 2, i) = accuracy;
         end_time = toc;
         disp(['Total Time = ' num2str(end_time)]); 
@@ -36,6 +35,6 @@ for i = 1:length(distance_metric)
     plots(i) = plot(results(:,1,i), results(:,2, i));
 end
 legend(plots, feature)
-xlabel('Lambda Value');
+xlabel('K Value');
 ylabel('Accuracy');
 

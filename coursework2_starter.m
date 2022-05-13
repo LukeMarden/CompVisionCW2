@@ -11,7 +11,8 @@
 % FEATURE = 'pca';
 FEATURE = 'fisher';
 
-CLASSIFIER = 'nearest neighbor';
+% CLASSIFIER = 'nearest neighbor';
+CLASSIFIER = 'svm';
 
 % Set up paths to VLFeat functions. 
 % See http://www.vlfeat.org/matlab/matlab.html for VLFeat Matlab documentation
@@ -99,7 +100,7 @@ switch lower(FEATURE)
     case 'fisher'
         bin_size = 8; 
         vocab_size = 200;
-%         [means, cov, prior] = build_fisher_vocab(train_image_paths, vocab_size, 'grayscale', bin_size);
+        [means, cov, prior] = build_fisher_vocab(train_image_paths, vocab_size, 'grayscale', bin_size);
         train_image_feats = get_fisher_sifts(train_image_paths, bin_size, 'grayscale', means, cov, prior);
         test_image_feats  = get_fisher_sifts(test_image_paths, bin_size, 'grayscale', means, cov, prior); 
 end
