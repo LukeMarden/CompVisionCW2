@@ -21,16 +21,9 @@ for i = 1:endIndex/2
 %     minusMeanY = features(y,:) - meanY;
 %     slope = (sum (minusMeanX .* minusMeanY)) / (sum(minusMeanX .* minusMeanX));
 %     yIntercept = meanY - (slope .* meanX);
-%     disp("Line of best fit is");
-%     text = "Y = ";
-%     text2 = "x + ";
-%     disp(text + slope + text2 + yIntercept);
-    % Get orthagonal line
-%     orthSlope = (-1 / slope);
-%     yInterceptOrth = meanY - ( orthSlope .* meanX );
-%     disp("Orthagonal line is");
-%     disp(text + orthSlope + text2 + yInterceptOrth);
-    % Cartesian line of best fit
+
+
+%     Cartesian line of best fit
 %     pointY = (slope * -50) + yIntercept;
 %     pointY2 = (slope * 50) + yIntercept;
 %     line = [pointY -50; pointY2 50];
@@ -42,7 +35,7 @@ for i = 1:endIndex/2
     rotatedWithIndex = zeros(size(features,1) + 1, size(features,2));
     rotatedWithIndex(end,:) = 1:size(features,2);
     rotatedWithIndex(1:end-1, :) = features;
-    %rotatedWithIndex(3) = 1:size(features,2);
+    
     % Translate points to be around the origin then rotate and translate
     % back
     rotatedWithIndex(x,:) = rotatedWithIndex(x,:) - meanX;
@@ -72,6 +65,18 @@ currentCompressNo = curentCompressNo + 1;
 if currentCompressNo ~= maxCompressNo
     reducedVector = PCA(reducedVector, currentCompressNo, maxCompressNo);
 end
+
+
+    % Get orthagonal line
+%     orthSlope = (-1 / slope);
+%     yInterceptOrth = meanY - ( orthSlope .* meanX );
+%     disp("Orthagonal line is");
+%     disp(text + orthSlope + text2 + yInterceptOrth);
+
+%     disp("Line of best fit is");
+%     text = "Y = ";
+%     text2 = "x + ";
+%     disp(text + slope + text2 + yIntercept);
 
 
 
