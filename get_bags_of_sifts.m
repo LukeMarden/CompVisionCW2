@@ -1,7 +1,7 @@
 % Implementated according to the starter code prepared by James Hays, Brown University
 % Michal Mackiewicz, UEA
 
-function image_feats = get_bags_of_sifts(image_paths, setting, bin_size, colour_scheme)
+function image_feats = get_bags_of_sifts(image_paths, setting, bin_size, colour_scheme, spatial_Depth)
 % image_paths is an N x 1 cell array of strings where each string is an
 % image path on the file system.
 
@@ -76,14 +76,13 @@ switch lower(setting)
         end
         
    case 'spatial'
-       disp("I'm a little teapot");
        for i = 1: size(image_paths)
            image = imread(char(image_paths(i)));
            image = rgb2gray(image);
            image = single(image);
            image = vl_imsmooth(image,2);
            
-           histogram = RecursivePyramid(image, vocab, 0, 0, 1, bin_size);
+           histogram = RecursivePyramid(image, vocab, 0, 0, spatial_Depth, bin_size);
            %Normalise the histogram
            total = sum(histogram);
            histogram = histogram / total;
