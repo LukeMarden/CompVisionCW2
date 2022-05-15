@@ -18,14 +18,24 @@ for i = 1:length(colour)
     results = zeros(length(vocab_size),2, length(bin_size));
     for j = 1:length(bin_size)
         for k = 1:length(vocab_size)
+            if i == 1
+                if j == 1
+                    continue;
+                elseif j == 2
+                    if k == 1 || k == 2 || k==3 || k==4
+                        continue
+                    end
+                end 
+                
+            end
             disp([colour(i) + ", bin size:" + bin_size(j) + ", vocab_size:" + vocab_size(k)]);
             start_time = datetime(now, 'ConvertFrom', 'datenum');
             disp(['Start Time = ' datestr(start_time)]);
             tic;               
             vocab = build_vocabulary(train_image_paths, vocab_size(k), colour{i}, bin_size(j)); %Also allow for different sift parameters
-            save('vocab.mat', 'vocab')
-            train_image_feats = get_bags_of_sifts(train_image_paths, 'normal',  bin_size(j), colour{i}, 0); %Allow for different sift parameters
-            test_image_feats  = get_bags_of_sifts(test_image_paths, 'normal', bin_size(j), colour{i}, 0); 
+%             save('vocab.mat', 'vocab')
+            train_image_feats = get_bags_of_sifts(train_image_paths, 'normal',  bin_size(j), colour{i}, 0, vocab); %Allow for different sift parameters
+            test_image_feats  = get_bags_of_sifts(test_image_paths, 'normal', bin_size(j), colour{i}, 0, vocab); 
             save(["AUTOMATED_SIFT_Results2" + "_" + i + "_" + j + '_' + k + '.mat'], 'train_image_feats', 'test_image_feats');
             predicted_categories = k_nearest_neighbour_classifier(train_image_feats, train_labels, test_image_feats, 15, 'spearman');
             classify_time = toc;
@@ -39,26 +49,27 @@ for i = 1:length(colour)
     end
     data{i} = results;
 end
-for i = 1:length(colour)
-    %data_ = cell2mat(data(i));
-    plots = gobjects(length(bin_size), 1);
-    figure; hold on
-    for j = 1:length(bin_size)
-        plots(i) = plot(results(:,1,j), results(:,2, j));
-    end
-    %legend(plots, bin_size)
-    xlabel('Vocabulary Size');
-    ylabel('Accuracy');
-    title(colour(i))
-end 
+save('data_sift.mat', 'data')
+% for i = 1:length(colour)
+%     %data_ = cell2mat(data(i));
+%     plots = gobjects(length(bin_size), 1);
+%     figure; hold on
+%     for j = 1:length(bin_size)
+%         plots(i) = plot(results(:,1,j), results(:,2, j));
+%     end
+%     %legend(plots, bin_size)
+%     xlabel('Vocabulary Size');
+%     ylabel('Accuracy');
+%     title(colour(i))
+% end 
 
 %Spatial pyramid testing
-bin_size_Pyr = [16,32];
-vocab_size_Pyr = [10,50,100];
-spatial_Depth = [2,4,8];
+bin_size_Pyr = [8,16];
+vocab_size_Pyr = [100,250,500];
+spatial_Depth = [1,2,4];
 data_Pyr = cell(1, length(colour));
 
-for i = 1:length(colour)
+for i = 1:1%length(colour)
     results = zeros(length(vocab_size),2, length(bin_size));
     for j = 1:length(bin_size)
         for k = 1:length(vocab_size)
@@ -68,9 +79,9 @@ for i = 1:length(colour)
                 disp(['Start Time = ' datestr(start_time)]);
                 tic;               
                 vocab = build_vocabulary(train_image_paths, vocab_size(k), colour{i}, bin_size(j)); %Also allow for different sift parameters
-                save('vocab.mat', 'vocab')
-                train_image_feats = get_bags_of_sifts(train_image_paths, 'spatial',  bin_size(j), colour{i}, spatial_Depth(l)); %Allow for different sift parameters
-                test_image_feats  = get_bags_of_sifts(test_image_paths, 'spatial', bin_size(j), colour{i}, spatial_Depth(l)); 
+%                 save('vocab.mat', 'vocab')
+                train_image_feats = get_bags_of_sifts(train_image_paths, 'spatial',  bin_size(j), colour{i}, spatial_Depth(l), vocab); %Allow for different sift parameters
+                test_image_feats  = get_bags_of_sifts(test_image_paths, 'spatial', bin_size(j), colour{i}, spatial_Depth(l),vocab); 
                 save(["AUTOMATED_SPATIAL_Results2" + "_" + i + "_" + j + '_' + k + '.mat'], 'train_image_feats', 'test_image_feats');
                 predicted_categories = k_nearest_neighbour_classifier(train_image_feats, train_labels, test_image_feats, 15, 'spearman');
                 classify_time = toc;
@@ -85,4 +96,3 @@ for i = 1:length(colour)
     end
     data_Pyr{i} = results;
 end
-
