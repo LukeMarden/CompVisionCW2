@@ -1,7 +1,8 @@
 colour = {'grayscale', 'rgb', 'opponent'};
-bin_size = [4,16,32,64];
-vocab_size = [10,50,100,250,500];
+bin_size = [4,64];
+vocab_size = [10,100];
 data = cell(1, length(colour));
+data_PCA = cell(1,length(colour));
 
 data_path = 'data/';
 categories = {'Kitchen', 'Store', 'Bedroom', 'LivingRoom', 'House', ...
@@ -16,6 +17,7 @@ num_train_per_cat = 100;
 
 for i = 1:length(colour)
     results = zeros(length(vocab_size),2, length(bin_size));
+    results_PCA = zeros(length(vocab_size),2, length(bin_size));
     for j = 1:length(bin_size)
         for k = 1:length(vocab_size)
             disp([colour(i) + ", bin size:" + bin_size(j) + ", vocab_size:" + vocab_size(k)]);
@@ -26,19 +28,28 @@ for i = 1:length(colour)
             save('vocab.mat', 'vocab')
             train_image_feats = get_bags_of_sifts(train_image_paths, 'normal',  bin_size(j), colour{i}); %Allow for different sift parameters
             test_image_feats  = get_bags_of_sifts(test_image_paths, 'normal', bin_size(j), colour{i}); 
-            save(["AUTOMATED_SIFT_Results2" + "_" + i + "_" + j + '_' + k + '.mat'], 'train_image_feats', 'test_image_feats');
+            train_image_feats_PCA = PCA(train_image_feats, 0, 4);
+            test_image_feats_PCA = PCA(test_image_feats, 0, 4);
+            save(["AUTOMATED_PCA_Results" + "_" + i + "_" + j + '_' + k + '.mat'], 'train_image_feats', 'test_image_feats');
             predicted_categories = k_nearest_neighbour_classifier(train_image_feats, train_labels, test_image_feats, 15, 'spearman');
+            predicted_categories_PCA = k_nearest_neighbour_classifier(train_image_feats_PCA, train_labels, test_image_feats_PCA, 15, 'spearman');
             classify_time = toc;
             disp(['Model Building = ' num2str(classify_time)]); 
             accuracy = get_accuracy(test_labels, categories, predicted_categories);
+            accuracy_PCA = get_accuracy(test_labels, categories, predicted_categories_PCA);
             results(k, 1, j) = vocab_size(k);
             results(k, 2, j) = accuracy;
+            results_PCA(k,1,j) = vocab_size(k);
+            results_PCA(k,2,j) = accuracy_PCA;
             end_time = toc;
             disp(['Total Time = ' num2str(end_time)]); 
         end
     end
     data{i} = results;
+    data_PCA{i} = results_PCA;
 end
+save("Non-PCA_Results", "data");
+save("PCA_Results", "data_PCA");
 for i = 1:length(colour)
     %data_ = cell2mat(data(i));
     plots = gobjects(length(bin_size), 1);
@@ -51,4 +62,5 @@ for i = 1:length(colour)
     ylabel('Accuracy');
     title(colour(i))
 end 
+
 
