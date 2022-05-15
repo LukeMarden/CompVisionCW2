@@ -24,8 +24,8 @@ for i = 1:length(colour)
             tic;               
             vocab = build_vocabulary(train_image_paths, vocab_size(k), colour{i}, bin_size(j)); %Also allow for different sift parameters
             save('vocab.mat', 'vocab')
-            train_image_feats = get_bags_of_sifts(train_image_paths, 'normal',  bin_size(j), colour{i}); %Allow for different sift parameters
-            test_image_feats  = get_bags_of_sifts(test_image_paths, 'normal', bin_size(j), colour{i}); 
+            train_image_feats = get_bags_of_sifts(train_image_paths, 'normal',  bin_size(j), colour{i}, 0); %Allow for different sift parameters
+            test_image_feats  = get_bags_of_sifts(test_image_paths, 'normal', bin_size(j), colour{i}, 0); 
             save(["AUTOMATED_SIFT_Results2" + "_" + i + "_" + j + '_' + k + '.mat'], 'train_image_feats', 'test_image_feats');
             predicted_categories = k_nearest_neighbour_classifier(train_image_feats, train_labels, test_image_feats, 15, 'spearman');
             classify_time = toc;
@@ -51,4 +51,38 @@ for i = 1:length(colour)
     ylabel('Accuracy');
     title(colour(i))
 end 
+
+%Spatial pyramid testing
+bin_size_Pyr = [16,32];
+vocab_size_Pyr = [10,50,100];
+spatial_Depth = [2,4,8];
+data_Pyr = cell(1, length(colour));
+
+for i = 1:length(colour)
+    results = zeros(length(vocab_size),2, length(bin_size));
+    for j = 1:length(bin_size)
+        for k = 1:length(vocab_size)
+            for l = 1:length(spatial_Depth)
+                disp([colour(i) + ", bin size:" + bin_size(j) + ", vocab_size:" + vocab_size(k)]);
+                start_time = datetime(now, 'ConvertFrom', 'datenum');
+                disp(['Start Time = ' datestr(start_time)]);
+                tic;               
+                vocab = build_vocabulary(train_image_paths, vocab_size(k), colour{i}, bin_size(j)); %Also allow for different sift parameters
+                save('vocab.mat', 'vocab')
+                train_image_feats = get_bags_of_sifts(train_image_paths, 'spatial',  bin_size(j), colour{i}, spatial_Depth(l)); %Allow for different sift parameters
+                test_image_feats  = get_bags_of_sifts(test_image_paths, 'spatial', bin_size(j), colour{i}, spatial_Depth(l)); 
+                save(["AUTOMATED_SPATIAL_Results2" + "_" + i + "_" + j + '_' + k + '.mat'], 'train_image_feats', 'test_image_feats');
+                predicted_categories = k_nearest_neighbour_classifier(train_image_feats, train_labels, test_image_feats, 15, 'spearman');
+                classify_time = toc;
+                disp(['Model Building = ' num2str(classify_time)]); 
+                accuracy = get_accuracy(test_labels, categories, predicted_categories);
+                results(k, 1, j) = vocab_size(k);
+                results(k, 2, j) = accuracy;
+                end_time = toc;
+                disp(['Total Time = ' num2str(end_time)]); 
+            end
+        end
+    end
+    data_Pyr{i} = results;
+end
 
